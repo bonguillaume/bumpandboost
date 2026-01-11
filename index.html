@@ -2,10 +2,812 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Test Bump & Boost</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bump & Boost</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+            max-width: 1200px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        #game-board {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        #canvas-container {
+            position: relative;
+        }
+
+        canvas {
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: block;
+            background: #f5f5f5;
+        }
+
+        #controls {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .info-panel h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .score-item {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .score-blue {
+            background: #4A90E2;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .score-orange {
+            background: #FF8C42;
+            color: white;
+            margin-left: 5px;
+        }
+
+        .turn-info {
+            text-align: center;
+            font-size: 1.1em;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .vehicle-status {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 2px solid #ddd;
+        }
+
+        .vehicle-status.selected {
+            border-color: #4A90E2;
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.3);
+        }
+
+        .vehicle-status h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .cooldown {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .actions {
+            margin-top: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-move {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-emp {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-oil {
+            background: #FF9800;
+            color: white;
+        }
+
+        .btn-end {
+            background: #9C27B0;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .btn-restart {
+            background: #f44336;
+            color: white;
+        }
+
+        #message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #856404;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+            border: 1px solid #333;
+        }
+
+        @media (max-width: 900px) {
+            #game-board {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>🎉 GitHub Pages fonctionne !</h1>
-    <p>Si vous voyez ce message, votre site est en ligne.</p>
-</body>
-</html>
+    <div id="game-container">
+        <h1>⚡ Bump & Boost ⚡</h1>
+        <p class="subtitle">Jeu de stratégie tactique - Contrôlez les zones d'énergie !</p>
+        
+        <div id="game-board">
+            <div id="canvas-container">
+                <canvas id="gameCanvas"></canvas>
+            </div>
+            
+            <div id="controls">
+                <div class="info-panel">
+                    <h3>Scores</h3>
+                    <div class="score-display">
+                        <div class="score-item score-blue">
+                            <div>Bleu (Vous)</div>
+                            <div style="font-size: 1.5em; font-weight: bold;" id="score-blue">0</div>
+                        </div>
+                        <div class="score-item score-orange">
+                            <div>Orange (IA)</div>
+                            <div style="font-size: 1.5em; font-weight: bold;" id="score-orange">0</div>
+                        </div>
+                    </div>
+                    <div class="turn-info">
+                        Tour <span id="current-turn">1</span> / 12
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <h3>Vos Véhicules</h3>
+                    <div id="vehicle-status"></div>
+                </div>
+
+                <div class="info-panel actions">
+                    <h3>Actions</h3>
+                    <button class="btn-move" id="btn-move">
+                        🚗 DÉPLACEMENT (max 3 cases)
+                    </button>
+                    <button class="btn-emp" id="btn-emp">
+                        ⚡ EMP (Stun, portée 3)
+                    </button>
+                    <button class="btn-oil" id="btn-oil">
+                        🛢️ NAPPE D'HUILE (2x2)
+                    </button>
+                    <button class="btn-end" id="btn-end">
+                        ✅ FIN DU TOUR
+                    </button>
+                </div>
+
+                <div class="info-panel legend">
+                    <h3>Légende</h3>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFD700;"></div>
+                        <span>Zone d'énergie</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #8B4513;"></div>
+                        <span>Mur</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(100,100,100,0.6);"></div>
+                        <span>Nappe d'huile</span>
+                    </div>
+                </div>
+
+                <div id="message">Sélectionnez un véhicule bleu pour commencer</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE.JS =====
+        const state = {
+            grid: { width: 12, height: 9, tileSize: 48 },
+            turn: 1,
+            maxTurns: 12,
+            phase: 'player', // 'player' or 'ai'
+            scores: { blue: 0, orange: 0 },
+            vehicles: [],
+            energyZones: [],
+            walls: [],
+            oilSlicks: [],
+            selectedVehicle: null,
+            actionMode: null, // 'move', 'emp', 'oil'
+            playerActionsUsed: 0,
+            maxPlayerActions: 2,
+            movePreview: []
+        };
+
+        function initState() {
+            // Zones d'énergie fixes
+            state.energyZones = [
+                { x: 2, y: 2 },
+                { x: 9, y: 2 },
+                { x: 5, y: 6 }
+            ];
+
+            // Murs (bordures + quelques obstacles)
+            state.walls = [];
+            for (let x = 0; x < state.grid.width; x++) {
+                state.walls.push({ x, y: 0 });
+                state.walls.push({ x, y: state.grid.height - 1 });
+            }
+            for (let y = 1; y < state.grid.height - 1; y++) {
+                state.walls.push({ x: 0, y });
+                state.walls.push({ x: state.grid.width - 1, y });
+            }
+            // Obstacles internes
+            state.walls.push({ x: 4, y: 4 }, { x: 5, y: 4 }, { x: 7, y: 4 });
+
+            // Véhicules
+            state.vehicles = [
+                { id: 1, team: 'blue', x: 2, y: 7, empCooldown: 0, oilCooldown: 0, stunned: false },
+                { id: 2, team: 'blue', x: 9, y: 7, empCooldown: 0, oilCooldown: 0, stunned: false },
+                { id: 3, team: 'orange', x: 2, y: 1, empCooldown: 0, oilCooldown: 0, stunned: false },
+                { id: 4, team: 'orange', x: 9, y: 1, empCooldown: 0, oilCooldown: 0, stunned: false }
+            ];
+        }
+
+        // ===== MAP.JS =====
+        function isWall(x, y) {
+            return state.walls.some(w => w.x === x && w.y === y);
+        }
+
+        function getVehicleAt(x, y) {
+            return state.vehicles.find(v => v.x === x && v.y === y);
+        }
+
+        function isOilSlick(x, y) {
+            return state.oilSlicks.some(o => o.x === x && o.y === y);
+        }
+
+        function isEnergyZone(x, y) {
+            return state.energyZones.some(z => z.x === x && z.y === y);
+        }
+
+        // ===== RULES.JS =====
+        function canMove(vehicle, targetX, targetY) {
+            if (vehicle.stunned) return false;
+            if (targetX < 0 || targetX >= state.grid.width || targetY < 0 || targetY >= state.grid.height) return false;
+            if (isWall(targetX, targetY)) return false;
+            return true;
+        }
+
+        function getMoveRange(vehicle) {
+            const positions = [];
+            const visited = new Set();
+            const queue = [{ x: vehicle.x, y: vehicle.y, dist: 0 }];
+            visited.add(`${vehicle.x},${vehicle.y}`);
+
+            // Vérifier si sur huile
+            const maxDist = isOilSlick(vehicle.x, vehicle.y) ? 1 : 3;
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (current.dist >= maxDist) continue;
+
+                const directions = [
+                    { dx: 0, dy: -1 }, // N
+                    { dx: 1, dy: 0 },  // E
+                    { dx: 0, dy: 1 },  // S
+                    { dx: -1, dy: 0 }  // O
+                ];
+
+                for (const dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    const key = `${nx},${ny}`;
+
+                    if (visited.has(key)) continue;
+                    if (!canMove(vehicle, nx, ny)) continue;
+
+                    visited.add(key);
+                    positions.push({ x: nx, y: ny });
+                    queue.push({ x: nx, y: ny, dist: current.dist + 1 });
+                }
+            }
+
+            return positions;
+        }
+
+        function moveVehicle(vehicle, targetX, targetY) {
+            const occupant = getVehicleAt(targetX, targetY);
+            
+            if (occupant) {
+                // Calculer direction de poussée
+                const dx = targetX - vehicle.x;
+                const dy = targetY - vehicle.y;
+                const pushX = targetX + Math.sign(dx);
+                const pushY = targetY + Math.sign(dy);
+
+                // Vérifier si la poussée est possible
+                if (canMove(occupant, pushX, pushY) && !getVehicleAt(pushX, pushY)) {
+                    occupant.x = pushX;
+                    occupant.y = pushY;
+                    vehicle.x = targetX;
+                    vehicle.y = targetY;
+                    return true;
+                } else {
+                    return false; // Poussée impossible
+                }
+            } else {
+                vehicle.x = targetX;
+                vehicle.y = targetY;
+                return true;
+            }
+        }
+
+        function canUseEMP(vehicle) {
+            return !vehicle.stunned && vehicle.empCooldown === 0;
+        }
+
+        function getEMPTargets(vehicle) {
+            const targets = [];
+            const directions = [
+                { dx: 0, dy: -1 }, // N
+                { dx: 1, dy: 0 },  // E
+                { dx: 0, dy: 1 },  // S
+                { dx: -1, dy: 0 }  // O
+            ];
+
+            for (const dir of directions) {
+                for (let i = 1; i <= 3; i++) {
+                    const tx = vehicle.x + dir.dx * i;
+                    const ty = vehicle.y + dir.dy * i;
+                    
+                    if (isWall(tx, ty)) break;
+                    
+                    const target = getVehicleAt(tx, ty);
+                    if (target && target.team !== vehicle.team) {
+                        targets.push({ x: tx, y: ty, vehicle: target });
+                        break;
+                    }
+                }
+            }
+
+            return targets;
+        }
+
+        function useEMP(vehicle, target) {
+            target.stunned = true;
+            vehicle.empCooldown = 2;
+        }
+
+        function canUseOil(vehicle) {
+            return !vehicle.stunned && vehicle.oilCooldown === 0;
+        }
+
+        function placeOil(x, y) {
+            // Placer une zone 2x2
+            for (let dx = 0; dx < 2; dx++) {
+                for (let dy = 0; dy < 2; dy++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx < state.grid.width && ny < state.grid.height && !isWall(nx, ny)) {
+                        if (!isOilSlick(nx, ny)) {
+                            state.oilSlicks.push({ x: nx, y: ny });
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateScores() {
+            for (const zone of state.energyZones) {
+                const vehicle = getVehicleAt(zone.x, zone.y);
+                if (vehicle) {
+                    state.scores[vehicle.team]++;
+                }
+            }
+        }
+
+        function updateCooldowns(team) {
+            for (const vehicle of state.vehicles) {
+                if (vehicle.team === team) {
+                    if (vehicle.empCooldown > 0) vehicle.empCooldown--;
+                    if (vehicle.oilCooldown > 0) vehicle.oilCooldown--;
+                    vehicle.stunned = false;
+                }
+            }
+        }
+
+        // ===== AI.JS =====
+        function aiTurn() {
+            showMessage("L'IA réfléchit...");
+            
+            setTimeout(() => {
+                const orangeVehicles = state.vehicles.filter(v => v.team === 'orange' && !v.stunned);
+                
+                for (const vehicle of orangeVehicles) {
+                    aiVehicleAction(vehicle);
+                }
+
+                updateScores();
+                updateCooldowns('orange');
+                endAITurn();
+            }, 1000);
+        }
+
+        function aiVehicleAction(vehicle) {
+            // 1) EMP sur bleu en zone ou proche
+            if (canUseEMP(vehicle)) {
+                const empTargets = getEMPTargets(vehicle);
+                for (const target of empTargets) {
+                    const onZone = isEnergyZone(target.x, target.y);
+                    const nearZone = state.energyZones.some(z => 
+                        Math.abs(z.x - target.x) + Math.abs(z.y - target.y) === 1
+                    );
+                    
+                    if (onZone || nearZone) {
+                        useEMP(vehicle, target.vehicle);
+                        return;
+                    }
+                }
+            }
+
+            // 2) Pousser un bleu hors d'une zone
+            const movePositions = getMoveRange(vehicle);
+            for (const pos of movePositions) {
+                const occupant = getVehicleAt(pos.x, pos.y);
+                if (occupant && occupant.team === 'blue' && isEnergyZone(pos.x, pos.y)) {
+                    moveVehicle(vehicle, pos.x, pos.y);
+                    return;
+                }
+            }
+
+            // 3) Se déplacer vers zone non contrôlée
+            const uncontrolledZones = state.energyZones.filter(z => {
+                const v = getVehicleAt(z.x, z.y);
+                return !v || v.team === 'blue';
+            });
+
+            if (uncontrolledZones.length > 0) {
+                const target = uncontrolledZones.reduce((closest, zone) => {
+                    const dist = Math.abs(zone.x - vehicle.x) + Math.abs(zone.y - vehicle.y);
+                    const closestDist = Math.abs(closest.x - vehicle.x) + Math.abs(closest.y - vehicle.y);
+                    return dist < closestDist ? zone : closest;
+                });
+
+                const bestMove = movePositions.reduce((best, pos) => {
+                    const dist = Math.abs(target.x - pos.x) + Math.abs(target.y - pos.y);
+                    const bestDist = Math.abs(target.x - best.x) + Math.abs(target.y - best.y);
+                    return dist < bestDist ? pos : best;
+                }, movePositions[0] || vehicle);
+
+                if (bestMove) {
+                    moveVehicle(vehicle, bestMove.x, bestMove.y);
+                }
+            }
+
+            // 4) Poser huile si bleu proche d'une zone
+            if (canUseOil(vehicle)) {
+                const blueVehicles = state.vehicles.filter(v => v.team === 'blue');
+                for (const blue of blueVehicles) {
+                    const nearZone = state.energyZones.some(z =>
+                        Math.abs(z.x - blue.x) + Math.abs(z.y - blue.y) <= 2
+                    );
+                    
+                    if (nearZone) {
+                        placeOil(vehicle.x - 1, vehicle.y - 1);
+                        vehicle.oilCooldown = 3;
+                        return;
+                    }
+                }
+            }
+        }
+
+        function endAITurn() {
+            state.turn++;
+            state.phase = 'player';
+            state.playerActionsUsed = 0;
+            updateCooldowns('blue');
+            
+            if (state.turn > state.maxTurns) {
+                endGame();
+            } else {
+                showMessage("À votre tour ! Sélectionnez un véhicule.");
+                render();
+                updateUI();
+            }
+        }
+
+        // ===== RENDER.JS =====
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = state.grid.width * state.grid.tileSize;
+        canvas.height = state.grid.height * state.grid.tileSize;
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Grille
+            ctx.strokeStyle = '#ddd';
+            for (let x = 0; x <= state.grid.width; x++) {
+                ctx.beginPath();
+                ctx.moveTo(x * state.grid.tileSize, 0);
+                ctx.lineTo(x * state.grid.tileSize, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= state.grid.height; y++) {
+                ctx.beginPath();
+                ctx.moveTo(0, y * state.grid.tileSize);
+                ctx.lineTo(canvas.width, y * state.grid.tileSize);
+                ctx.stroke();
+            }
+
+            // Zones d'énergie
+            ctx.fillStyle = '#FFD700';
+            for (const zone of state.energyZones) {
+                ctx.fillRect(zone.x * state.grid.tileSize + 2, zone.y * state.grid.tileSize + 2, 
+                    state.grid.tileSize - 4, state.grid.tileSize - 4);
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(zone.x * state.grid.tileSize + 2, zone.y * state.grid.tileSize + 2,
+                    state.grid.tileSize - 4, state.grid.tileSize - 4);
+            }
+
+            // Murs
+            ctx.fillStyle = '#8B4513';
+            for (const wall of state.walls) {
+                ctx.fillRect(wall.x * state.grid.tileSize, wall.y * state.grid.tileSize,
+                    state.grid.tileSize, state.grid.tileSize);
+            }
+
+            // Nappes d'huile
+            ctx.fillStyle = 'rgba(100, 100, 100, 0.6)';
+            for (const oil of state.oilSlicks) {
+                ctx.fillRect(oil.x * state.grid.tileSize + 4, oil.y * state.grid.tileSize + 4,
+                    state.grid.tileSize - 8, state.grid.tileSize - 8);
+            }
+
+            // Aperçu déplacement
+            if (state.actionMode === 'move' && state.movePreview.length > 0) {
+                ctx.fillStyle = 'rgba(74, 144, 226, 0.3)';
+                for (const pos of state.movePreview) {
+                    ctx.fillRect(pos.x * state.grid.tileSize + 4, pos.y * state.grid.tileSize + 4,
+                        state.grid.tileSize - 8, state.grid.tileSize - 8);
+                }
+            }
+
+            // Aperçu EMP
+            if (state.actionMode === 'emp' && state.selectedVehicle) {
+                const targets = getEMPTargets(state.selectedVehicle);
+                ctx.fillStyle = 'rgba(33, 150, 243, 0.3)';
+                for (const target of targets) {
+                    ctx.fillRect(target.x * state.grid.tileSize + 4, target.y * state.grid.tileSize + 4,
+                        state.grid.tileSize - 8, state.grid.tileSize - 8);
+                }
+            }
+
+            // Véhicules
+            for (const vehicle of state.vehicles) {
+                const x = vehicle.x * state.grid.tileSize + state.grid.tileSize / 2;
+                const y = vehicle.y * state.grid.tileSize + state.grid.tileSize / 2;
+                
+                ctx.fillStyle = vehicle.team === 'blue' ? '#4A90E2' : '#FF8C42';
+                ctx.beginPath();
+                ctx.arc(x, y, 16, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (vehicle === state.selectedVehicle) {
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                }
+
+                // Indicateur stun
+                if (vehicle.stunned) {
+                    ctx.fillStyle = 'red';
+                    ctx.font = '20px Arial';
+                    ctx.fillText('⚡', x - 10, y - 20);
+                }
+
+                // ID
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(vehicle.id, x, y);
+            }
+        }
+
+        // ===== INPUT.JS =====
+        function handleCanvasClick(event) {
+            if (state.phase !== 'player') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = Math.floor((event.clientX - rect.left) / state.grid.tileSize);
+            const clickY = Math.floor((event.clientY - rect.top) / state.grid.tileSize);
+
+            if (state.actionMode === 'move' && state.selectedVehicle) {
+                handleMoveClick(clickX, clickY);
+            } else if (state.actionMode === 'emp' && state.selectedVehicle) {
+                handleEMPClick(clickX, clickY);
+            } else if (state.actionMode === 'oil' && state.selectedVehicle) {
+                handleOilClick(clickX, clickY);
+            } else {
+                handleVehicleSelection(clickX, clickY);
+            }
+        }
+
+        function handleVehicleSelection(x, y) {
+            const vehicle = getVehicleAt(x, y);
+            if (vehicle && vehicle.team === 'blue') {
+                state.selectedVehicle = vehicle;
+                state.actionMode = null;
+                state.movePreview = [];
+                showMessage(`Véhicule ${vehicle.id} sélectionné. Choisissez une action.`);
+                render();
+                updateUI();
+            }
+        }
+
+        function handleMoveClick(x, y) {
+            const positions = getMoveRange(state.selectedVehicle);
+            const validMove = positions.find(p => p.x === x && p.y === y);
+
+            if (validMove) {
+                if (moveVehicle(state.selectedVehicle, x, y)) {
+                    state.playerActionsUsed++;
+                    state.actionMode = null;
+                    state.movePreview = [];
+                    
+                    if (state.playerActionsUsed >= state.maxPlayerActions) {
+                        endPlayerTurn();
+                    } else {
+                        state.selectedVehicle = null;
+                        showMessage(`Action effectuée ! (${state.playerActionsUsed}/${state.maxPlayerActions})`);
+                    }
+                    render();
+                    updateUI();
+                } else {
+                    showMessage("Déplacement impossible (poussée bloquée)");
+                }
+            }
+        }
+
+        function handleEMPClick(x, y) {
+            const targets = getEMPTargets(state.selectedVehicle);
+            const validTarget = targets.find(t => t.x === x && t.y === y);
+
+            if (validTarget) {
+                useEMP(state.selectedVehicle, validTarget.vehicle);
+                state.playerActionsUsed++;
+                state.actionMode = null;
+
+                if (state.playerActionsUsed >= state.maxPlayerActions) {
+                    endPlayerTurn();
+                } else {
+                    state.selectedVehicle = null;
+                    showMessage(`EMP utilisé ! (${state.playerActionsUsed}/${state.maxPlayerActions})`);
+                }
+                render();
+                updateUI();
+            }
+        }
+
+        function handleOilClick(x, y) {
+            if (!isWall(x, y)) {
+                placeOil(x, y);
+                state.selectedVehicle.oilCooldown = 3;
+                state.playerActionsUsed++;
+                state.actionMode = null;
+
+                if (state.playerActionsUsed >= state.maxPlayerActions) {
+                    endPlayerTurn();
+                } else {
+                    state.selectedVehicle = null;
+                    showMessage(`Huile posée ! (${state.playerActionsUsed}/${state.maxPlayerActions})`);
+                }
+                render();
+                updateUI();
+            }
+        }
+
+        // ===== UI =====
+        function updateUI() {
+            document.getElementById('score-blue').textContent = state.scores.blue;
+            document.getElementById('score-orange').textContent = state.scores.orange;
+            document.getElementById('current-turn').textContent = state.turn;
+
+            const vehicleStatus = document.getElementById('
